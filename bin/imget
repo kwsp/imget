@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+from imget import entry_point
+
+entry_point()
