@@ -10,8 +10,6 @@ from urllib.request import urljoin, urlopen, urlretrieve
 from bs4 import BeautifulSoup  # HTML Parser
 from tqdm import tqdm  # Progress bar
 
-SUFFIXES = (".jpg", ".jpeg", ".png")
-
 
 def parse_url_target(url: str, class_=None, id_=None) -> Tuple[str, List[str]]:
     """
