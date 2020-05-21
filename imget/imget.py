@@ -10,6 +10,8 @@ from urllib.request import urljoin, urlopen, urlretrieve
 from bs4 import BeautifulSoup  # HTML Parser
 from tqdm import tqdm  # Progress bar
 
+ERROR_LOG_FILE = "imget_error.txt"
+
 
 def parse_url_target(url: str, class_=None, id_=None) -> Tuple[str, List[str]]:
     """
@@ -39,6 +41,7 @@ def parse_url_target(url: str, class_=None, id_=None) -> Tuple[str, List[str]]:
         soup_ = soup.find("div", class_=class_)
         if soup_:
             soup = soup_
+            dived = True
         else:
             print(f"Warning: class {class_} did not match any elements, ignoring.")
 
@@ -84,9 +87,9 @@ def main(url: str, out_dir: str = None, class_: str = None, id_: str = None):
     """
     Main code
     """
-    print(f"Downloading and parsing HTML...")
+    print(f"\nDownloading and parsing HTML...")
     # Parse URL target
-    title, img_links = parse_url_target(url)
+    title, img_links = parse_url_target(url, class_=class_, id_=id_)
 
     # Create new dir with out_dir if specified
     if out_dir:
@@ -110,8 +113,16 @@ def main(url: str, out_dir: str = None, class_: str = None, id_: str = None):
     for link in tqdm(img_links):
         basename = Path(link).name
         out_path = out_dir / basename
+
         # Download and write image
-        urlretrieve(link, out_path)
+        try:
+            urlretrieve(link, out_path)
+        except Exception as e:
+            e_str = str(e)
+            log_ = f"Error: {e_str}\n"
+            print(log_)
+            with open(ERROR_LOG_FILE, "a+") as f:
+                f.write(log_)
 
     print(f"Downloaded {len(img_links)} files.")
 
