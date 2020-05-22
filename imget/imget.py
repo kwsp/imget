@@ -76,10 +76,11 @@ def parse_url_target(url: str, class_=None, id_=None) -> Tuple[str, List[str]]:
     ]
     for a_tag in a_tags:
         img_tag = a_tag.findChild("img")
-        if img_tag and a_tag.get("href").endswith(SUFFIXES):
-            img_links.append(a_tag.get("href"))
-        else:
-            img_links.append(img_tag.get("src"))
+        if img_tag:
+            if a_tag.get("href").endswith(SUFFIXES):
+                img_links.append(a_tag.get("href"))
+            else:
+                img_links.append(img_tag.get("src"))
 
     if not img_links:
         print("Warning: No image links were found.")
