@@ -5,6 +5,8 @@ import sys
 
 from bs4 import BeautifulSoup  # HTML Parser
 
+from .logger import get_logger
+
 
 SUFFIXES = ("jpg", "jpeg", "png", "gif")
 
@@ -37,15 +39,25 @@ def parse_url_target(
         img_links - (list[]) list of img links
     """
     # Preprocess URL
+    get_logger().debug(f"Preprocessing URL, original: {url}")
+    # Add HTTP if not
     if not url.startswith("http"):
         url = "http://" + url
 
+    # Remove query string
     url = _remove_query_string(url)
 
+    # Remove trailing slash
+    url = url.strip("/")
+
+    get_logger().debug(f"Preprocessing URL, final: {url}")
+
     # Get initial url
+    get_logger().debug("Getting HTML page...")
     resp = requests.get(url)
 
     # Parse with bs4. lxml backend is faster than html.parse
+    get_logger().debug("Parsing HTML page...")
     soup = BeautifulSoup(resp.text, "lxml")
 
     # Get title for new dir name
@@ -56,23 +68,30 @@ def parse_url_target(
     # If after filtering by class_, soup_ is not empty
     # set soup to soup_
     if class_:
+        get_logger().debug(f"Matching by CSS class: {class_}")
         soup_ = soup.select(f".{class_}")
         if soup_:
             soup = soup_[0]
         else:
-            print(f"Warning: class {class_} did not match any elements, ignoring.")
+            get_logger().warning(
+                f"Warning: class {class_} did not match any elements, ignoring."
+            )
 
     # If after filtering by id_, soup_ is not empty
     # set soup to soup_
     if id_:
+        get_logger().debug(f"Matching by id: {id_}")
         soup_ = soup.select(f"#{id_}")
         if soup_:
             soup = soup_
         else:
-            print(f"Warning: id '{id_}' did not match any elements, ignoring.")
+            get_logger().warning(
+                f"Warning: id '{id_}' did not match any elements, ignoring."
+            )
 
     img_links = []
     for _tag in tags:
+        get_logger().info("Validating img and a tags")
         #
         # Check all 'a' tags that contain an 'img' tag within. Sometimes the
         # highest resolution images are linked by the 'a' tag.
@@ -119,11 +138,12 @@ def parse_url_target(
                     img_links.append(good_link)
 
     if not img_links:
-        print("Warning: No image links were found.")
+        get_logger().warning("Warning: No image links were found.")
         sys.exit(1)
 
     # Simple validation
     img_links = [_remove_query_string(l) for l in img_links if l.startswith("http")]
 
+    get_logger().debug(f"Parsing complete, found, {len(img_links)} image links.")
     return title, img_links
 
