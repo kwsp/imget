@@ -35,6 +35,7 @@ def main(
     url: str,
     out_dir: str = None,
     class_: str = None,
+    tags_: str = "a,img",
     id_: str = None,
     log_level=logging.DEBUG,
 ):
@@ -44,7 +45,7 @@ def main(
     init_logger(log_level)
 
     get_logger().info("Downloading and parsing HTML . . .")
-    title, img_links = parse_url_target(url, class_=class_, id_=id_)
+    title, img_links = parse_url_target(url, class_=class_, id_=id_, tags_=tags_)
 
     # Create new dir with out_dir if specified
     if out_dir:
@@ -74,18 +75,21 @@ def entry_point():
     """
     Command line interface
     """
-    parser = argparse.ArgumentParser(description="Download images from a HTML page.")
+    parser = argparse.ArgumentParser(description="Download images linked from a HTML page.")
     parser.add_argument(
-        "-c", "--cls", type=str, help="CSS class of main element", default=None
+        "-c", "--cls", type=str, help="CSS class of main element to constrain image search.", default=None
     )
     parser.add_argument(
-        "-i", "--id", type=str, help="HTML id of main element", default=None
+        "-i", "--id", type=str, help="HTML id of main element to constrain image search.", default=None
     )
-    parser.add_argument("-o", "--out", type=str, help="Output directory", default=None)
     parser.add_argument(
-        "-v", "--verbosity", action="count", help="Verbosity", default=0
+        "-t", "--tags", type=str, help="HTML tag to find image links. If multiple, give them in a comma separated string, e.g. \"a,img\".", default="a,img"
     )
-    parser.add_argument("url", metavar="url", help="URL of HTML page")
+    parser.add_argument("-o", "--out", type=str, help="Output directory, defaults to url basename.", default=None)
+    parser.add_argument(
+        "-v", "--verbosity", action="count", help="Verbosity.", default=0
+    )
+    parser.add_argument("url", metavar="url", help="URL of HTML page.")
 
     args = parser.parse_args()
 
@@ -95,6 +99,7 @@ def entry_point():
         url=args.url,
         out_dir=args.out,
         class_=args.cls,
+        tags_=args.tags,
         id_=args.id,
         log_level=log_level,
     )

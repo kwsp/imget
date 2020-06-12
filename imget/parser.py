@@ -23,7 +23,10 @@ def _remove_query_string(url: str) -> str:
 
 
 def parse_url_target(
-    url: str, class_=None, id_=None, tags=["a", "img"]
+    url: str, 
+    class_=None, 
+    id_=None, 
+    tags_="a,img",
 ) -> Tuple[str, List[str]]:
     """
     Arguments:
@@ -38,6 +41,9 @@ def parse_url_target(
         title - (str) Page title
         img_links - (list[]) list of img links
     """
+    # Get tags
+    tags = tags_.split(",")
+
     # Preprocess URL
     get_logger().debug(f"Preprocessing URL, original: {url}")
     # Add HTTP if not
@@ -144,6 +150,11 @@ def parse_url_target(
     # Simple validation
     img_links = [_remove_query_string(l) for l in img_links if l.startswith("http")]
 
-    get_logger().debug(f"Parsing complete, found, {len(img_links)} image links.")
+    n_list_before = len(img_links)
+    # Remove duplicates
+    img_links = list(set(img_links))
+    n_list_after = len(img_links)
+
+    get_logger().debug(f"Parsing complete, found, {len(img_links)} image links, removed {n_list_after - n_list_before} duplicates.")
     return title, img_links
 
