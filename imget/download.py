@@ -51,4 +51,3 @@ def download_url_list(urls: List[str], out_dir: str, max_workers=None):
         # results = [job.result() for job in jobs]
 
     get_logger().info(f"Downloaded {len(urls)} files.")
-

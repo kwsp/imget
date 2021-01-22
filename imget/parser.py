@@ -23,9 +23,9 @@ def _remove_query_string(url: str) -> str:
 
 
 def parse_url_target(
-    url: str, 
-    class_=None, 
-    id_=None, 
+    url: str,
+    class_=None,
+    id_=None,
     tags_="a,img",
 ) -> Tuple[str, List[str]]:
     """
@@ -155,6 +155,7 @@ def parse_url_target(
     img_links = list(set(img_links))
     n_list_after = len(img_links)
 
-    get_logger().debug(f"Parsing complete, found, {len(img_links)} image links, removed {n_list_after - n_list_before} duplicates.")
+    get_logger().debug(
+        f"Parsing complete, found, {len(img_links)} image links, removed {n_list_after - n_list_before} duplicates."
+    )
     return title, img_links
-

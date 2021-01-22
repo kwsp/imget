@@ -1,17 +1,17 @@
 """
 Download images from the main content of a website
 """
-from pathlib import Path
-from typing import List, Tuple
 import argparse
 import logging
 import os
 import re
 import sys
+from pathlib import Path
+from typing import List, Tuple
 
-from .parser import parse_url_target
 from .download import download_url_list
 from .logger import get_logger, init_logger
+from .parser import parse_url_target
 
 ERROR_LOG_FILE = "imget_error.txt"
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0"
@@ -75,17 +75,37 @@ def entry_point():
     """
     Command line interface
     """
-    parser = argparse.ArgumentParser(description="Download images linked from a HTML page.")
-    parser.add_argument(
-        "-c", "--cls", type=str, help="CSS class of main element to constrain image search.", default=None
+    parser = argparse.ArgumentParser(
+        description="Download images linked from a HTML page."
     )
     parser.add_argument(
-        "-i", "--id", type=str, help="HTML id of main element to constrain image search.", default=None
+        "-c",
+        "--cls",
+        type=str,
+        help="CSS class of main element to constrain image search.",
+        default=None,
     )
     parser.add_argument(
-        "-t", "--tags", type=str, help="HTML tag to find image links. If multiple, give them in a comma separated string, e.g. \"a,img\".", default="a,img"
+        "-i",
+        "--id",
+        type=str,
+        help="HTML id of main element to constrain image search.",
+        default=None,
     )
-    parser.add_argument("-o", "--out", type=str, help="Output directory, defaults to url basename.", default=None)
+    parser.add_argument(
+        "-t",
+        "--tags",
+        type=str,
+        help='HTML tag to find image links. If multiple, give them in a comma separated string, e.g. "a,img".',
+        default="a,img",
+    )
+    parser.add_argument(
+        "-o",
+        "--out",
+        type=str,
+        help="Output directory, defaults to url basename.",
+        default=None,
+    )
     parser.add_argument(
         "-v", "--verbosity", action="count", help="Verbosity.", default=0
     )
