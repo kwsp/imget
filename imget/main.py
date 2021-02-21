@@ -28,16 +28,10 @@ logging.getLogger("urllib3").propagate = False
 
 
 def _mkdir(name: str) -> pathlib.Path:
-    """
-    Create new directory with name given by 'name'.
-    If directory exists, exit the program.
-
-    Arguments:
-        name - (str) relative or absolute path
-    """
+    "Create new directory with `name`."
     # Create directory
     _dir = pathlib.Path(name)
-    _dir.mkdir(parents=True, exist_ok=False)
+    _dir.mkdir(parents=True, exist_ok=True)
     return _dir
 
 
@@ -50,9 +44,7 @@ def main(
     log_level=logging.INFO,
     listonly: bool = False,
 ):
-    """
-    Main code
-    """
+    "Main code"
     logger.setLevel(log_level)
 
     # Preprocess URL

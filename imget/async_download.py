@@ -27,6 +27,9 @@ async def download_link(
 
     kwargs are passed to `session.request()`.
     """
+    if file.exists():
+        logger.info("File %s exist, skipping URL: %s", file, url)
+        return
     resp = await session.request(method="GET", url=url, **kwargs)
     resp.raise_for_status()
     logger.info("Got response [%s] for URL: %s", resp.status, url)
