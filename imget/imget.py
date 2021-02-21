@@ -1,23 +1,32 @@
 """
 Download images from the main content of a website
 """
+from typing import List, Tuple
 import argparse
 import logging
 import os
 import re
 import sys
-from pathlib import Path
-from typing import List, Tuple
+import pathlib
 import requests
 
-from .download import download_url_list
+from .async_download import bulk_download
 from .parser import clean_url, parse_html
 
 ERROR_LOG_FILE = "imget_error.txt"
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0"
 
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s:%(name)s: %(message)s",
+    level=logging.DEBUG,
+    datefmt="%H:%M:%S",
+    stream=sys.stderr,
+)
+logger = logging.getLogger("imget")
+logging.getLogger("chardet.charsetprober").disabled = True
 
-def _mkdir(name: str) -> str:
+
+def _mkdir(name: str) -> pathlib.Path:
     """
     Create new directory with name given by 'name'.
     If directory exists, exit the program.
@@ -26,17 +35,17 @@ def _mkdir(name: str) -> str:
         name - (str) relative or absolute path
     """
     # Create directory
-    _dir = Path(name)
+    _dir = pathlib.Path(name)
     _dir.mkdir(parents=True, exist_ok=False)
-    return _dir.resolve().as_posix()
+    return _dir
 
 
 def main(
     url: str,
-    out_dir: str = None,
-    class_: str = None,
+    out_dir: str = "",
+    class_: str = "",
     tags_: str = "a,img",
-    id_: str = None,
+    id_: str = "",
     log_level=logging.DEBUG,
     listonly: bool = False,
 ):
@@ -51,23 +60,21 @@ def main(
     if not url.startswith("http"):
         url = "http://" + url
 
-    # Remove query string
-    url = clean_url(url)
-
-    # Remove trailing slash
-    url = url.strip("/")
-
+    url = clean_url(url)  # Remove query string
     logging.debug(f"Preprocessing URL, final: {url}")
 
     # Get initial url
     logging.debug("Getting HTML page...")
-    resp = requests.get(url)
+    headers = {"User-Agent": USER_AGENT}
+    try:
+        resp = requests.get(url, headers=headers)
+    except requests.HTTPError as e:
+        logging.error(f"requests exception for url {url}")
+        logging.error(e)
+        sys.exit(1)
 
     # Get title for new dir name
-    # HTML pge title is often a bad name for a directory, so
-    # we'll use the last section of the url
     title = url.split("/")[-1]
-
     img_links = parse_html(resp.text, class_=class_, id_=id_, tags_=tags_)
 
     if listonly:
@@ -76,28 +83,11 @@ def main(
             print(link)
         sys.exit(0)
 
-    # Create new dir with out_dir if specified
+    # Create new dir with out_dir or title and download
     if out_dir:
-        try:
-            logging.debug(f"Trying to create provided out dir: {out_dir}")
-            out_dir = _mkdir(out_dir)
-        except FileExistsError:
-            # Fall back to page title as dir name
-            logging.error(
-                f"Creating destination dir {out_dir} failed, using page title as out dir instead."
-            )
-
-    # Create new dir with title
-    if not out_dir:
-        try:
-            logging.debug(f"Trying to create out dir with title: {title}")
-            out_dir = _mkdir(title)
-        except FileExistsError:
-            logging.error("Cannot create output directory.")
-            sys.exit(1)
-
-    logging.info(f"Downloading to directory {out_dir}")
-    download_url_list(img_links, out_dir)
+        bulk_download(_mkdir(out_dir), img_links, headers=headers)
+    else:
+        bulk_download(_mkdir(title), img_links, headers=headers)
 
 
 def entry_point():
@@ -161,7 +151,3 @@ def entry_point():
         log_level=log_level,
         listonly=args.listonly,
     )
-
-
-if __name__ == "__main__":
-    breakpoint()
