@@ -2,22 +2,20 @@
 Download helpers
 
 """
-from concurrent.futures import ThreadPoolExecutor as Executor
 from typing import List
-from urllib.request import urlretrieve
+from concurrent.futures import ThreadPoolExecutor as Executor
+import logging
+import urllib.request
 import os
-
-from .logger import get_logger
 
 
 def _download_url(url: str, out_path: str):
     try:
-        urlretrieve(url, out_path)
-        get_logger().info(f"Downloaded {url}")
+        urllib.request.urlretrieve(url, out_path)
+        logging.info(f"Downloaded {url}")
     except Exception as err:
         e_str = str(err)
-        log_ = f"Error: {e_str}\n"
-        get_logger().error(log_)
+        logging.error(f"Error: {e_str}\n")
 
 
 _counter = 0
@@ -37,7 +35,7 @@ def download_url_list(urls: List[str], out_dir: str, max_workers=None):
     using python threads
     """
     # Download all image urls to new directory
-    get_logger().info(f"Downloading {len(urls)} files . . .")
+    logging.info(f"Downloading {len(urls)} files . . .")
 
     with Executor(max_workers=max_workers) as exe:
         jobs = []
@@ -50,4 +48,4 @@ def download_url_list(urls: List[str], out_dir: str, max_workers=None):
 
         # results = [job.result() for job in jobs]
 
-    get_logger().info(f"Downloaded {len(urls)} files.")
+    logging.info(f"Downloaded {len(urls)} files.")
