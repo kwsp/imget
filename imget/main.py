@@ -45,7 +45,7 @@ def main(
     url: str,
     out_dir: str = "",
     class_: str = "",
-    tags_: str = "a,img",
+    tags_: str = "a,img,video",
     id_: str = "",
     log_level=logging.INFO,
     listonly: bool = False,

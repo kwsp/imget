@@ -8,7 +8,9 @@ from bs4 import BeautifulSoup  # HTML Parser
 
 logger = logging.getLogger(__name__)
 
+
 IMG_TYPES = ("jpg", "jpeg", "png", "gif", "webp")
+VIDEO_MIMETYPES = ("video/mp4", "video/webm", "video/ogg")
 
 
 def clean_url(url: str) -> str:
@@ -47,7 +49,7 @@ def parse_html(
     url: str = "",
     class_: str = "",
     id_: str = "",
-    tags_: str = "a,img",
+    tags_: str = "a,img,video",
 ) -> List[str]:
     """
     Arguments:
@@ -116,6 +118,20 @@ def parse_html(
 
             if link:
                 add_valid_link(url, link)
+
+    if "video" in tags_to_check:
+        for v_tag in soup.select("video"):
+            link = None
+            src_tags = v_tag.findChildren("source")
+            for video_mime in VIDEO_MIMETYPES:
+                tmp = [
+                    src_tag for src_tag in src_tags if src_tag.get("type") == video_mime
+                ]
+                if tmp:
+                    link = tmp[0].get("src")
+                    continue
+
+            add_valid_link(url, link)
 
     if not img_links:
         logger.debug("no image links were found.")

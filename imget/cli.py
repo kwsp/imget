@@ -30,7 +30,7 @@ def entry_point():
         "--tags",
         type=str,
         help='HTML tag to find image links. If multiple, give them in a comma separated string, e.g. "a,img".',
-        default="a,img",
+        default="a,img,video",
     )
     parser.add_argument(
         "-o",
