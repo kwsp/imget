@@ -22,7 +22,6 @@ def best_srcset(srcset: str) -> str:
     """Get the highest resolution link from srcset
     https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-srcset
     """
-    logging.info("srcset: " + srcset)
     best_link = ""
     best_w_or_x = 0
     for pair in srcset.split(","):
