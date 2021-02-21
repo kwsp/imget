@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, NamedTuple, Optional
 import logging
 import urllib.error
 import urllib.parse
@@ -9,8 +9,14 @@ from bs4 import BeautifulSoup  # HTML Parser
 logger = logging.getLogger(__name__)
 
 
-IMG_TYPES = ("jpg", "jpeg", "png", "gif", "webp")
-VIDEO_MIMETYPES = ("video/mp4", "video/webm", "video/ogg")
+IMAGE_MIMETYPES = {
+    "image/jpg": "jpg",
+    "image/jpeg": "jpeg",
+    "image/png": "png",
+    "image/gif": "gif",
+    "image/webp": "webp",
+}
+VIDEO_MIMETYPES = {"video/mp4": ".mp4", "video/webm": ".webm", "video/ogg": ".ogg"}
 
 
 def clean_url(url: str) -> str:
@@ -95,11 +101,12 @@ def parse_html(
 
     # Check all 'a' tags that contain an 'img' tag within. Sometimes the
     # highest resolution images are linked by the 'a' tag.
+    img_exts = tuple(IMAGE_MIMETYPES.values())
     if "a" in tags_to_check:
         for a_tag in soup.select("a[href]"):
             img_tag = a_tag.findChild("img")
             link = a_tag.get("href")
-            if img_tag and link.endswith(IMG_TYPES):
+            if img_tag and link.endswith(img_exts):
                 add_valid_link(url, link)
 
     # Check 'img' tags themselves. First check the 'data-srcset' and 'srcset',

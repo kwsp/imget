@@ -4,6 +4,7 @@
 from typing import Iterable
 import asyncio
 import logging
+import mimetypes
 import pathlib
 import sys
 
@@ -33,6 +34,8 @@ async def download_link(
     resp = await session.request(method="GET", url=url, **kwargs)
     resp.raise_for_status()
     logger.info("Got response [%s] for URL: %s", resp.status, url)
+
+    ctype = resp.headers["content-type"]
 
     async with aiofiles.open(file, "wb") as fd:
         while True:
