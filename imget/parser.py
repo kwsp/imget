@@ -6,6 +6,7 @@ import sys
 
 from bs4 import BeautifulSoup  # HTML Parser
 
+logger = logging.getLogger(__name__)
 
 IMG_TYPES = ("jpg", "jpeg", "png", "gif", "webp")
 
@@ -30,8 +31,8 @@ def best_srcset(srcset: str) -> str:
         # using either 'w' (width) or 'x' (pixel density)
         try:
             size_i = int(size[:-1])
-        except ValueError as e:
-            logging.exception(f"Failed to parse srcset: {srcset}")
+        except ValueError:
+            logger.exception("failed to parse srcset: %s", srcset)
             return ""
         else:
             if size_i > best_w_or_x:
@@ -63,21 +64,21 @@ def parse_html(
 
     # If after filtering by class_, soup_ is not empty, set soup to soup_
     if class_:
-        logging.debug(f"Matching by CSS class: {class_}")
+        logger.debug("matching by CSS class: %s", class_)
         soup_ = soup.select(f".{class_}")
         if soup_:
             soup = soup_[0]
         else:
-            logging.debug(f"class {class_} did not match any elements, ignoring.")
+            logger.debug("class %s did not match any elements, ignoring.", class_)
 
     # If after filtering by id_, soup_ is not empty, set soup to soup_
     if id_:
-        logging.debug(f"Matching by id: {id_}")
+        logger.debug("matching by id: %s", id_)
         soup_ = soup.select(f"#{id_}")
         if soup_:
             soup = soup_
         else:
-            logging.debug(f"id '{id_}' did not match any elements, ignoring.")
+            logger.debug("id '%s' did not match any elements, ignoring.", id_)
 
     img_links = set()
 
@@ -85,7 +86,7 @@ def parse_html(
         try:
             abslink = urllib.parse.urljoin(url, link)
         except (urllib.error.URLError, ValueError):
-            logging.exception("Error parsing URL: %s", a_link)
+            logger.exception("error parsing URL: %s", link)
             pass
         else:
             img_links.add(abslink)
@@ -117,8 +118,8 @@ def parse_html(
                 add_valid_link(url, link)
 
     if not img_links:
-        logging.debug("No image links were found.")
+        logger.debug("no image links were found.")
         return []
 
-    logging.debug(f"Parsing complete, found, {len(img_links)} image links.")
+    logger.debug("parsing complete, found, %s image links.", len(img_links))
     return list(img_links)

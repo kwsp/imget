@@ -1,3 +1,3 @@
-from imget import entry_point
+from .cli import entry_point
 
 entry_point()

@@ -16,7 +16,7 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
     stream=sys.stderr,
 )
-logger = logging.getLogger("adownload")
+logger = logging.getLogger(__name__)
 logging.getLogger("chardet.charsetprober").disabled = True
 
 
@@ -34,7 +34,6 @@ async def download_link(
     async with aiofiles.open(file, "wb") as fd:
         while True:
             chunk = await resp.content.read(chunk_size)
-            print(len(chunk))
             if not chunk:
                 break
             await fd.write(chunk)
