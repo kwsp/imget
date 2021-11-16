@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Asynchronously download a list of links."""
 
-from typing import Iterable
+from typing import List, Iterable, Optional
 import asyncio
 import logging
 import pathlib
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger("chardet.charsetprober").disabled = True
 
 
-async def download_link(
+async def _download_link(
     file: pathlib.Path, url: str, session: ClientSession, chunk_size=65536, **kwargs
 ) -> None:
     """GET request wrapper to download file
@@ -39,25 +39,27 @@ async def download_link(
             await fd.write(chunk)
 
 
-async def bulk_download_and_write(
-    outdir: pathlib.Path, urls: Iterable[str], **kwargs
+async def _bulk_download_and_write(
+        outdir: pathlib.Path, urls: Iterable[str], fnames: Optional[List[str]], **kwargs
 ) -> None:
     """Concurrently download multiple `urls` to `outdir`."""
     async with ClientSession() as session:
         tasks = []
-        for url in urls:
-            fname = url.split("/")[-1]
+        if not fnames:
+            fnames = [url.split("/")[-1] for url in urls]
+
+        for url, fname in zip(urls, fnames):
             tasks.append(
-                download_link(file=(outdir / fname), url=url, session=session, **kwargs)
+                _download_link(file=(outdir / fname), url=url, session=session, **kwargs)
             )
         await asyncio.gather(*tasks)
 
 
-def bulk_download(outdir: pathlib.Path, urls: Iterable[str], **kwargs) -> None:
+def bulk_download(outdir: pathlib.Path, urls: Iterable[str], fnames: Optional[List[str]]=None, **kwargs) -> None:
     """Sync interface to asynchronously download multiple `urls` to `outdir`. kwargs are passed to aiohttp session.request."""
     assert sys.version_info >= (3, 7), "Asyncio requires Python 3.7+."
 
-    asyncio.run(bulk_download_and_write(outdir=outdir, urls=urls, **kwargs))
+    asyncio.run(_bulk_download_and_write(outdir=outdir, urls=urls, fnames=fnames, **kwargs))
 
 
 if __name__ == "__main__":
