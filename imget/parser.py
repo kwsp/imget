@@ -76,7 +76,7 @@ def parse_html(
         logger.debug("matching by id: %s", id_)
         soup_ = soup.select(f"#{id_}")
         if soup_:
-            soup = soup_
+            soup = soup_[0]
         else:
             logger.debug("id '%s' did not match any elements, ignoring.", id_)
 
