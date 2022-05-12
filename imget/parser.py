@@ -1,8 +1,7 @@
-from typing import List, Optional
+from typing import List
 import logging
 import urllib.error
 import urllib.parse
-import sys
 
 from bs4 import BeautifulSoup  # HTML Parser
 
@@ -97,7 +96,7 @@ def parse_html(
         for a_tag in soup.select("a[href]"):
             img_tag = a_tag.findChild("img")
             link = a_tag.get("href")
-            if img_tag and link.endswith(IMG_TYPES):
+            if link and img_tag and link.endswith(IMG_TYPES):
                 add_valid_link(url, link)
 
     # Check 'img' tags themselves. First check the 'data-srcset' and 'srcset',

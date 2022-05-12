@@ -1,15 +1,12 @@
 """
 Download images from the main content of a website
 """
-from typing import List, Tuple
-import argparse
 import logging
-import os
 import sys
 import pathlib
 import requests
 
-from .async_download import bulk_download
+from .download import bulk_download
 from .parser import clean_url, parse_html
 
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0"
@@ -73,7 +70,7 @@ def main(
 
     # Get title for new dir name
     title = url.split("/")[-1]
-    img_links = parse_html(resp.text, class_=class_, id_=id_, tags_=tags_)
+    img_links = parse_html(resp.text, url=url, class_=class_, id_=id_, tags_=tags_)
 
     if listonly:
         # Return the list of links found and exit

@@ -2,9 +2,10 @@
 """Asynchronously download a list of links."""
 
 from typing import List, Iterable, Optional
+from pathlib import Path
+import argparse
 import asyncio
 import logging
-import pathlib
 import sys
 
 import aiofiles
@@ -21,14 +22,14 @@ logging.getLogger("chardet.charsetprober").disabled = True
 
 
 async def _download_link(
-    file: pathlib.Path, url: str, session: ClientSession, chunk_size=65536, **kwargs
+    file: Path, url: str, session: ClientSession, chunk_size=65536, **kwargs
 ) -> None:
     """GET request wrapper to download file
 
     kwargs are passed to `session.request()`.
     """
     resp = await session.request(method="GET", url=url, **kwargs)
-    resp.raise_for_status()
+    # resp.raise_for_status()
     logger.info("Got response [%s] for URL: %s", resp.status, url)
 
     async with aiofiles.open(file, "wb") as fd:
@@ -40,7 +41,7 @@ async def _download_link(
 
 
 async def _bulk_download_and_write(
-        outdir: pathlib.Path, urls: Iterable[str], fnames: Optional[List[str]], **kwargs
+    outdir: Path, urls: Iterable[str], fnames: Optional[List[str]], **kwargs
 ) -> None:
     """Concurrently download multiple `urls` to `outdir`."""
     async with ClientSession() as session:
@@ -50,25 +51,46 @@ async def _bulk_download_and_write(
 
         for url, fname in zip(urls, fnames):
             tasks.append(
-                _download_link(file=(outdir / fname), url=url, session=session, **kwargs)
+                _download_link(
+                    file=(outdir / fname), url=url, session=session, **kwargs
+                )
             )
         await asyncio.gather(*tasks)
 
 
-def bulk_download(outdir: pathlib.Path, urls: Iterable[str], fnames: Optional[List[str]]=None, **kwargs) -> None:
+def bulk_download(
+    outdir: Path, urls: Iterable[str], fnames: Optional[List[str]] = None, **kwargs
+) -> None:
     """Sync interface to asynchronously download multiple `urls` to `outdir`. kwargs are passed to aiohttp session.request."""
     assert sys.version_info >= (3, 7), "Asyncio requires Python 3.7+."
 
-    asyncio.run(_bulk_download_and_write(outdir=outdir, urls=urls, fnames=fnames, **kwargs))
+    asyncio.run(
+        _bulk_download_and_write(outdir=outdir, urls=urls, fnames=fnames, **kwargs)
+    )
+
+
+def cli_download():
+    assert sys.version_info >= (3, 7), "Script requires Python 3.7+."
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "links_file",
+        type=Path,
+        default="links.txt",
+        help="File with an URL on each line.",
+    )
+    parser.add_argument("-o", "--out", type=Path, default="dls", help="Out directory")
+    args = parser.parse_args()
+
+    links_file = args.links_file
+    assert links_file.exists()
+    with open(links_file) as infile:
+        urls = set(map(str.strip, infile))
+
+    outpath = args.o
+    outpath.mkdir()
+    bulk_download(outpath, urls)
 
 
 if __name__ == "__main__":
-    assert sys.version_info >= (3, 7), "Script requires Python 3.7+."
-    here = pathlib.Path(__file__).parent
-
-    with open(here.joinpath("links.txt")) as infile:
-        urls = set(map(str.strip, infile))
-
-    outpath = here.joinpath("new_dir")
-    outpath.mkdir()
-    bulk_download(outpath, urls)
+    cli_download()
